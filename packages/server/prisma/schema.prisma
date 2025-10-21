@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  publicKey String   @unique
+  secretKey String   @unique
+  createdAt DateTime @default(now())
+
+  // Relations
+  bugs Bug[]
+
+  @@map("projects")
+}
+
+model Bug {
+  id               String   @id @default(cuid())
+  title            String
+  steps            String
+  expected         String
+  actual           String
+  severity         String   // low, medium, high, critical
+  url              String
+  userAgent        String
+  viewport         String   // JSON string
+  consoleLogs      String?  // JSON string
+  networkErrors    String?  // JSON string
+  screenshotDataUrl String?
+  status           String   @default("new") // new, queued, analyzing, analyzed, error
+  aiAnalysis       String?
+  aiPatchDiff      String?
+  confidence       Float?
+  aiProvider       String?  // 'gemini' | 'fallback'
+  createdAt        DateTime @default(now())
+  projectId        String
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([projectId])
+  @@map("bugs")
+}
+
+model Job {
+  id        String   @id @default(cuid())
+  type      String   // e.g. ANALYZE_BUG
+  payload   String   // JSON string
+  status    String   @default("queued") // queued, processing, done, error
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+  @@map("jobs")
+}

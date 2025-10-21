@@ -1,0 +1,28 @@
+{
+  "name": "rehearsal-ai-monorepo",
+  "version": "1.0.0",
+  "description": "A TypeScript monorepo with snippet, server, and worker packages",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "setup": "cd packages/server && npm run migrate && npm run seed",
+    "dev:server": "cd packages/server && npm run dev",
+    "dev:worker": "cd packages/worker && npm run dev",
+    "build": "npm run build --workspaces",
+    "start:server": "cd packages/server && npm run start",
+    "start:worker": "cd packages/worker && npm run start",
+    "test:all": "npm run test --workspaces",
+    "clean": "npm run clean --workspaces",
+    "install:all": "npm install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
