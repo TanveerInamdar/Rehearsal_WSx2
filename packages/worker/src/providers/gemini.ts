@@ -19,14 +19,51 @@ export class GeminiProvider implements AIProvider {
       console.log('Sending request to Gemini API...');
       console.log('Model:', this.modelId);
       console.log('Prompt length:', prompt.length);
+      console.log('Screenshot available:', !!params.bug.screenshotDataUrl);
+      console.log('Screenshot data URL:', params.bug.screenshotDataUrl ? params.bug.screenshotDataUrl.substring(0, 50) + '...' : 'null');
+      
+      // Build content parts - include screenshot if available
+      const parts: any[] = [];
+      
+      // Add screenshot first if available (best practice per official docs)
+      if (params.bug.screenshotDataUrl) {
+        try {
+          // Extract base64 data and MIME type from data URL
+          const dataUrlMatch = params.bug.screenshotDataUrl.match(/^data:([^;]+);base64,(.+)$/);
+          if (dataUrlMatch) {
+            const mimeType = dataUrlMatch[1];
+            const base64Data = dataUrlMatch[2];
+            
+            // Validate MIME type is an image
+            if (mimeType.startsWith('image/')) {
+              parts.push({
+                inline_data: {
+                  mime_type: mimeType,
+                  data: base64Data
+                }
+              });
+              console.log('Added screenshot to Gemini request:', mimeType);
+            } else {
+              console.warn('Invalid MIME type for screenshot:', mimeType);
+            }
+          } else {
+            console.warn('Invalid data URL format for screenshot');
+          }
+        } catch (error) {
+          console.warn('Failed to process screenshot:', error);
+        }
+      }
+      
+      // Add text prompt after image (best practice per official docs)
+      parts.push({
+        text: prompt
+      });
       
       const response = await axios.post(
         `https://generativelanguage.googleapis.com/v1beta/models/${this.modelId}:generateContent?key=${this.apiKey}`,
         {
           contents: [{
-            parts: [{
-              text: prompt
-            }]
+            parts: parts
           }],
           generationConfig: {
             temperature: 0.3,
